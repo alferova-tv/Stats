@@ -122,6 +122,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#i.-полупараметрический-bootstrap" id="toc-i.-полупараметрический-bootstrap" class="nav-link active" data-scroll-target="#i.-полупараметрический-bootstrap">I. Полупараметрический bootstrap</a></li>
+  <li><a href="#ii.-непараметрический-бутстрап" id="toc-ii.-непараметрический-бутстрап" class="nav-link" data-scroll-target="#ii.-непараметрический-бутстрап">II. Непараметрический бутстрап</a></li>
   </ul>
 </nav>
     </div>
@@ -168,12 +169,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Информация о клиентах</li>
 </ol>
 <ul>
-<li>DtCustomer - дата, когда клиент стал “известным” для компании, например получил карту лояльности или зарегестрировался на сайте</li>
+<li>Year_Birth - дата рождения</li>
+<li>Dt_Customer - дата, когда клиент стал “известным” для компании, например получил карту лояльности или зарегестрировался на сайте</li>
 <li>Education — уровень образования клиента</li>
-<li>Marital — семейное положение клиента</li>
+<li>Marital_Status — семейное положение клиента</li>
 <li>Kidhome — количество маленьких детей в семье клиента</li>
 <li>Teenhome — количество подростков в семье клиента</li>
-<li>Доход — годовой доход домохозяйства клиента</li>
+<li>Income — годовой доход домохозяйства клиента</li>
+<li>Z_CostContact - сколько стоит один контакт с клиентом</li>
+<li>Z_Revenue - выручка с кклиента после его отклика хотя бы на одну из рекламных акций</li>
 </ul>
 <ol start="3" type="1">
 <li>Информация о тратах клиента на определённые виды продуктов</li>
@@ -198,19 +202,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>NumWebVisitsMonth — количество посещений веб-сайта компании за последний месяц</li>
 <li>Recency — количество дней с момента последней покупки</li>
 </ul>
-<div id="8d13b820" class="cell" data-execution_count="1">
+<div id="8d13b820" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># импортируем библиотеки</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> kstest, norm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="105c7add" class="cell" data-execution_count="2">
+<div id="105c7add" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># импортируем данные</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> pd.read_csv(<span class="st">'/Users/alferova_tv/Documents/Statistics/marketing/archive/marketing_campaign.csv'</span>, sep<span class="op">=</span><span class="st">';'</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display" data-execution_count="2">
+<div class="cell-output cell-output-display" data-execution_count="3">
 <div>
 
 
@@ -513,27 +518,259 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<div id="12af9d72" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>info_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Column"</span>: data.columns,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DType"</span>: data.dtypes.astype(<span class="bu">str</span>),</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Missing"</span>: data.isna().<span class="bu">sum</span>(),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Unique"</span>: data.nunique()</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>info_df.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Column</th>
+<th data-quarto-table-cell-role="th">DType</th>
+<th data-quarto-table-cell-role="th">Missing</th>
+<th data-quarto-table-cell-role="th">Unique</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ID</td>
+<td>int64</td>
+<td>0</td>
+<td>2240</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Year_Birth</td>
+<td>int64</td>
+<td>0</td>
+<td>59</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Education</td>
+<td>object</td>
+<td>0</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>Marital_Status</td>
+<td>object</td>
+<td>0</td>
+<td>8</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>Income</td>
+<td>float64</td>
+<td>24</td>
+<td>1974</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>Kidhome</td>
+<td>int64</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>Teenhome</td>
+<td>int64</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>Dt_Customer</td>
+<td>object</td>
+<td>0</td>
+<td>663</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>Recency</td>
+<td>int64</td>
+<td>0</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>MntWines</td>
+<td>int64</td>
+<td>0</td>
+<td>776</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>MntFruits</td>
+<td>int64</td>
+<td>0</td>
+<td>158</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>MntMeatProducts</td>
+<td>int64</td>
+<td>0</td>
+<td>558</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">12</th>
+<td>MntFishProducts</td>
+<td>int64</td>
+<td>0</td>
+<td>182</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>MntSweetProducts</td>
+<td>int64</td>
+<td>0</td>
+<td>177</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>MntGoldProds</td>
+<td>int64</td>
+<td>0</td>
+<td>213</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">15</th>
+<td>NumDealsPurchases</td>
+<td>int64</td>
+<td>0</td>
+<td>15</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">16</th>
+<td>NumWebPurchases</td>
+<td>int64</td>
+<td>0</td>
+<td>15</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">17</th>
+<td>NumCatalogPurchases</td>
+<td>int64</td>
+<td>0</td>
+<td>14</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18</th>
+<td>NumStorePurchases</td>
+<td>int64</td>
+<td>0</td>
+<td>14</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>NumWebVisitsMonth</td>
+<td>int64</td>
+<td>0</td>
+<td>16</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>AcceptedCmp3</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">21</th>
+<td>AcceptedCmp4</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">22</th>
+<td>AcceptedCmp5</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">23</th>
+<td>AcceptedCmp1</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">24</th>
+<td>AcceptedCmp2</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">25</th>
+<td>Complain</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">26</th>
+<td>Z_CostContact</td>
+<td>int64</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">27</th>
+<td>Z_Revenue</td>
+<td>int64</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">28</th>
+<td>Response</td>
+<td>int64</td>
+<td>0</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
 <section id="i.-полупараметрический-bootstrap" class="level2">
 <h2 class="anchored" data-anchor-id="i.-полупараметрический-bootstrap">I. Полупараметрический bootstrap</h2>
 <p>Используем его в регрессионном анализе. Проверим, есть ли зависимость между количеством детей в семье клиента и суммой, потраченной им на сладкие продукты за последние 2 года.<br>
 Интуитивно хочется предположить, что такая зависимость есть: больше детей - больше сладостей (линейная регрессия)</p>
 <p>То есть, предполагаем, что существует такая функция y = 𝛽₀ + 𝛽₁x₁ + ⋯ + 𝛽ᵣxᵣ + 𝜀, где y - сумма трат на сладкое, x - количество детей в семье, 𝛽 - коэффициенты, 𝜀 - погрешность</p>
 <div id="7e3bc988" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'num_children'</span>] <span class="op">=</span> data[<span class="st">'Kidhome'</span>] <span class="op">+</span> data[<span class="st">'Teenhome'</span>] <span class="co"># новый столбец - общее количество детей</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># создаём массивы из наших полей</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.array(data[<span class="st">'num_children'</span>]).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="co"># независимая переменная</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.array(data[<span class="st">'MntSweetProducts'</span>]) <span class="co"># зависимая переменная</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearRegression().fit(x, y) <span class="co"># модель линейной регрессииё</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>beta0 <span class="op">=</span> model.intercept_</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>beta1 <span class="op">=</span> model.coef_[<span class="dv">0</span>]</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># посмотрим коэффициенты модели</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Intercept (β0):"</span>, model.intercept_)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Slope (β1):"</span>, model.coef_[<span class="dv">0</span>])</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> model.predict(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'num_children'</span>] <span class="op">=</span> data[<span class="st">'Kidhome'</span>] <span class="op">+</span> data[<span class="st">'Teenhome'</span>] <span class="co"># новый столбец - общее количество детей</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># создаём массивы из наших полей</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.array(data[<span class="st">'num_children'</span>]).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>) <span class="co"># независимая переменная</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> np.array(data[<span class="st">'MntSweetProducts'</span>]) <span class="co"># зависимая переменная</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearRegression().fit(x, y) <span class="co"># модель линейной регрессии</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>beta0 <span class="op">=</span> model.intercept_</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>beta1 <span class="op">=</span> model.coef_[<span class="dv">0</span>]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># посмотрим коэффициенты модели</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Intercept (β0):"</span>, model.intercept_)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Slope (β1):"</span>, model.coef_[<span class="dv">0</span>])</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> model.predict(x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Intercept (β0): 47.05801280479697
 Slope (β1): -21.037552222989763</code></pre>
@@ -543,9 +780,9 @@ Slope (β1): -21.037552222989763</code></pre>
 Или буквально: траты на сладкое = 47.06 – 21.04 * число_детей - средние траты на сладости у клиента без детей - примерно 47 - каждый дополнительный ребёнок уменьшает траты на сладости примерно на 21</p>
 <p>Такой результат может говорить о том, что семьи с детьми больше экономят и покупают в основном базовые продукты (молоко, хлеб, мясо). Также возможно, что в данных просто мало детей</p>
 <div id="90282325" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data.groupby([<span class="st">'num_children'</span>])[<span class="st">'ID'</span>].count())</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data.groupby(<span class="st">'num_children'</span>)[<span class="st">'MntSweetProducts'</span>].mean())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data.groupby([<span class="st">'num_children'</span>])[<span class="st">'ID'</span>].count())</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(data.groupby(<span class="st">'num_children'</span>)[<span class="st">'MntSweetProducts'</span>].mean())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>num_children
 0     638
@@ -564,68 +801,68 @@ Name: MntSweetProducts, dtype: float64</code></pre>
 </div>
 <p>И правда, троих детей имеют всего 2,3% клиентов, и с увеличением детей уменьшается средняя сумма трат на сладости</p>
 <div id="7d39d2ed" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># посмотрим качество модели</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(model.score(x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># посмотрим качество модели</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(model.score(x, y))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>0.14679404935587625</code></pre>
 </div>
 </div>
-<p>Количество детей объясняет примерно 14.7% вариации трат на сладкие продукты. Есть слабая зависимость, но для маркетинговых данных, где поведение клиента зависит от множества факторов это нормально.<br>
+<p>Количество детей объясняет примерно 14.7% вариации трат на сладкие продукты. Есть слабая зависимость, но для маркетинговых данных, где поведение клиента зависит от множества факторов, это нормально.<br>
 Вывод: есть зависимость, но она слабая</p>
 <div id="0d8a0a3c" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># построим диаграмму рассеяния с линией регрессии</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>plt.scatter(x, y, alpha<span class="op">=</span><span class="fl">0.4</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>plt.plot(x, y_pred, color<span class="op">=</span><span class="st">'red'</span>)</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>])</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Количество детей'</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Траты на сладкие продукты'</span>)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Зависимость трат на сладкое от количества детей'</span>) </span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># построим диаграмму рассеяния с линией регрессии</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>,<span class="dv">4</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>plt.scatter(x, y, alpha<span class="op">=</span><span class="fl">0.4</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>plt.plot(x, y_pred, color<span class="op">=</span><span class="st">'red'</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.xticks([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>])</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Количество детей'</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Траты на сладкие продукты'</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Зависимость трат на сладкое от количества детей'</span>) </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bootstrap_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="bootstrap_files/figure-html/cell-8-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Теперь усилим характеристики регрессии с помощью полупараметрического бутстрапа.<br>
 Для данного случая он подходиит больше других, так как x представляет собой несколько категорий (0, 1, 2, 3) и в бутстрап-выборках частоты категорий будут случайными, это будет искажать реальное распределение. В полупараметрическом бутстрапе мы будем бутстрапировать не сами выборки, а ошибку 𝜀,</p>
-<p>Пошагово:<br> 1. Находим остатки 𝜀<br> 2. Перемешиваем остатки<br> 3. Создаём новые значения y* = ŷ + ε<em><br> 4. Обучаем регрессию на данных (x, y</em>)<br> 5. Сохраняем β₁*<br> 6. Повторяем 2000<br></p>
+<p>Пошагово:<br> 1. Находим остатки 𝜀<br> 2. Перемешиваем остатки<br> 3. Создаём новые значения y* = ŷ + ε*<br> 4. Обучаем регрессию на данных (x, y*)<br> 5. Сохраняем β₁*<br> 6. Повторяем 2000<br></p>
 <p>В итоге получаем:<br> - распределение β₁<br> - доверительный интервал<br> - вероятность того, что β₁ &lt; 0<br></p>
 <div id="f209f4b7" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>residuals <span class="op">=</span> y <span class="op">-</span> y_pred <span class="co"># остатки модели</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> <span class="dv">2000</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>boot_betas <span class="op">=</span> []</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="bu">len</span>(y)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(B):</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># случайная выборка остатков с повторением</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    eps_star <span class="op">=</span> np.random.choice(residuals, size<span class="op">=</span>n, replace<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># генерируем новые y*</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    y_star <span class="op">=</span> y_pred <span class="op">+</span> eps_star</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># обучаем регрессию на новых данных</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    model_star <span class="op">=</span> LinearRegression().fit(x, y_star)</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    boot_betas.append(model_star.coef_[<span class="dv">0</span>])</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>boot_betas <span class="op">=</span> np.array(boot_betas)</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Доверительный интервал</span></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>ci_low <span class="op">=</span> np.percentile(boot_betas, <span class="fl">2.5</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>ci_high <span class="op">=</span> np.percentile(boot_betas, <span class="fl">97.5</span>)</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'95% бутстрапный доверительный интервал для β1:'</span>, (ci_low, ci_high))</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'P(β1 &lt; 0):'</span>, np.mean(boot_betas <span class="op">&lt;</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>residuals <span class="op">=</span> y <span class="op">-</span> y_pred <span class="co"># остатки модели</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> <span class="dv">2000</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>boot_betas <span class="op">=</span> []</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="bu">len</span>(y)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(B):</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># случайная выборка остатков с повторением</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    eps_star <span class="op">=</span> np.random.choice(residuals, size<span class="op">=</span>n, replace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># генерируем новые y*</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    y_star <span class="op">=</span> y_pred <span class="op">+</span> eps_star</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># обучаем регрессию на новых данных</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    model_star <span class="op">=</span> LinearRegression().fit(x, y_star)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    boot_betas.append(model_star.coef_[<span class="dv">0</span>])</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>boot_betas <span class="op">=</span> np.array(boot_betas)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Доверительный интервал</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>ci_low <span class="op">=</span> np.percentile(boot_betas, <span class="fl">2.5</span>)</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>ci_high <span class="op">=</span> np.percentile(boot_betas, <span class="fl">97.5</span>)</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'95% бутстрапный доверительный интервал для β1:'</span>, (ci_low, ci_high))</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'P(β1 &lt; 0):'</span>, np.mean(boot_betas <span class="op">&lt;</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>95% бутстрапный доверительный интервал для β1: (np.float64(-23.143110208934168), np.float64(-19.02197391401105))
+<pre><code>95% бутстрапный доверительный интервал для β1: (np.float64(-23.13377817646093), np.float64(-18.973721018582765))
 P(β1 &lt; 0): 1.0</code></pre>
 </div>
 </div>
@@ -633,17 +870,17 @@ P(β1 &lt; 0): 1.0</code></pre>
 Ни в одной бутстрап-выборке коэффициент β1 не оказался большим либо равным 0</p>
 <p>Посроим график распределения коэффииентов β1</p>
 <div id="d075d1cf" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>plt.hist(boot_betas, bins<span class="op">=</span><span class="dv">50</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, linewidth<span class="op">=</span><span class="fl">0.3</span>, color<span class="op">=</span><span class="st">'#6EDEED'</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>plt.axvline(beta1, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Исходный β1'</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>plt.axvline(ci_low, color<span class="op">=</span><span class="st">'pink'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>plt.axvline(ci_high, color<span class="op">=</span><span class="st">'pink'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Бутстрап-распределение β1 (полупараметрическое)"</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>plt.hist(boot_betas, bins<span class="op">=</span><span class="dv">50</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, linewidth<span class="op">=</span><span class="fl">0.3</span>, color<span class="op">=</span><span class="st">'#6EDEED'</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>plt.axvline(beta1, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Исходный β1'</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>plt.axvline(ci_low, color<span class="op">=</span><span class="st">'pink'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>plt.axvline(ci_high, color<span class="op">=</span><span class="st">'pink'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Бутстрап-распределение β1 (полупараметрическое)"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="bootstrap_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="bootstrap_files/figure-html/cell-10-output-1.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -652,6 +889,125 @@ P(β1 &lt; 0): 1.0</code></pre>
 <h4 class="anchored" data-anchor-id="резюме">Резюме</h4>
 <blockquote class="blockquote">
 <p>В рамках линейной модели и имеющегося набора данных увеличение количества детей статистически значимо связано со снижением трат на сладкие продукты. Однако это не доказывает причинно-следственную связь и может быть результатом других факторов</p>
+</blockquote>
+</section>
+</section>
+<section id="ii.-непараметрический-бутстрап" class="level2">
+<h2 class="anchored" data-anchor-id="ii.-непараметрический-бутстрап">II. Непараметрический бутстрап</h2>
+<p>Теперь проверим похожую гипотезу с тратами на вино. Проверим, есть ли связь между семейным положением и суммой, потраченной на винную продукцию за последние 2 года.<br>
+Опять же, интуитивно хочется предположить, что одинокие люди чаще покупают алкоголь, чем семейные</p>
+<span style="font-size: 9pt">Список статусов:</span> &gt; <span style="font-size: 9pt">Single - одинок, Together - встречается, Married - женат, Divorced - разведён, Widow - вдова/вдовец, Alone - ?, Absurd - ?, YOLO - “живу один раз”</span><br> <br>
+<p>
+Итак, проверим следующие гипотезы:
+</p>
+<p><strong>H₀: Семейное положение не влияет на траты на винную продукцию</strong><br></p>
+<p><strong>H₁: Семейное положение влияет на траты на винную продукцию</strong></p>
+<p>Для этого буду использовать дисперсионный анализ или ANOVA, алгоритм взяла из книги Сары Бослаф “Статистика для всех”</p>
+<p>Зависимая переменная y - сумма, потраченная на винную продукцию (непрерывная)<br> Независимая переменная x - семейное положение (категориальная)<br> Значения y не зависят друг от друга<br> <br> - это подходит для ANOVA</p>
+<p>Ещё одно условие - приблизительно нормальное распределение y в каждой группе. Проверим с помощью ктритерия Колмогорова-Смирнова</p>
+<div id="31d3e707" class="cell" data-execution_count="35">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> data[<span class="st">'Marital_Status'</span>].unique(): </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    subset <span class="op">=</span> data[data[<span class="st">'Marital_Status'</span>] <span class="op">==</span> status][<span class="st">'MntWines'</span>]</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># слишком маленькие группы пропустим</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(subset) <span class="op">&lt;</span> <span class="dv">10</span>:</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(status, <span class="st">"— мало данных (n &lt; 10)"</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    mu, sigma <span class="op">=</span> subset.mean(), subset.std(ddof<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sigma <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(status, <span class="st">"— все значения одинаковы, тест не применим"</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    stat, p <span class="op">=</span> kstest(subset, <span class="st">'norm'</span>, args<span class="op">=</span>(mu, sigma))</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'</span><span class="sc">{</span>status<span class="sc">}</span><span class="ss">, </span><span class="sc">{</span>p <span class="op">&gt;=</span> <span class="fl">0.05</span><span class="sc">}</span><span class="ss">, p = </span><span class="sc">{</span>p<span class="sc">}</span><span class="ss">'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Single, False, p = 3.3976891725662063e-16
+Together, False, p = 7.873001456029385e-17
+Married, False, p = 3.78115980025644e-27
+Divorced, False, p = 1.1638620433949211e-06
+Widow, True, p = 0.10980979545429914
+Alone — мало данных (n &lt; 10)
+Absurd — мало данных (n &lt; 10)
+YOLO — мало данных (n &lt; 10)</code></pre>
+</div>
+</div>
+<p>Получилось, что только у группы со стаусом вдова/вдовец траты на винную продукцию распределены приблизительно нормально. У четырёх первых групп p-значения намного меньше границы, также размеры групп не одинаковые. Скорее всего распределение трат на винную продукцию сильно скошено, в таком случае ANOVA будет не достоверным.</p>
+<p>Посмотрим коэффициент ассиметрии трат на винную продукцию</p>
+<div id="8a851375" class="cell" data-execution_count="36">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> skew</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> data[<span class="st">"MntWines"</span>].dropna()</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Skewness:"</span>, skew(x))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Skewness: 1.1749830708938132</code></pre>
+</div>
+</div>
+<p>И правда, есть длинный хвост справа: много людей покупают мало вина, но есть небольшая группа людей, которые покупают много вина</p>
+<div id="2d4d4cd6" class="cell" data-execution_count="45">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># построим гистограмму распределения</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">7</span>,<span class="dv">5</span>))</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>sns.histplot(data[<span class="st">'MntWines'</span>], kde<span class="op">=</span><span class="va">False</span>, bins<span class="op">=</span><span class="dv">35</span>, linewidth<span class="op">=</span><span class="fl">0.5</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>, color<span class="op">=</span><span class="st">'#6EDEED'</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'MntWines'</span>)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Count'</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Распределение трат на вино'</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="bootstrap_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Используем непараметрический бутстрап, чтобы проверить</p>
+<p><strong>H₀: ​μ (мат. ожидание) по всем группам одинаковые</strong> <br></p>
+<p><strong>H₁: Хотя бы одна группа отличается</strong></p>
+<p>Бутстрап позволит оценить распределение статистики F (или разности средних) без предположения о нормальности.<br>
+Идея в том, чтобы оставить траты такими как есть, но случайным образам подставлять к ним названия групп много раз. То есть смоделировать такую ситуацию, в которой нулевая гипотеза истинна.<br>
+После перестановок посчитаем F-статистику она покажет, какими могут быть различия случайно, без разделения по группам. Если группы реально не влияют, то их названия можно менять местами — ничего не изменится. Если же эффект есть, то реальная F-статистика окажется намного больше, чем F-статистики из перестановочных выборок.</p>
+<p>Отсюда определим p-значение как p_value = P(Fслучайная ​≥ Fреальная​)</p>
+<div id="bc8da349" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> data[[<span class="st">'Marital_Status'</span>, <span class="st">'MntWines'</span>]].copy() </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> df[df[<span class="st">'Marital_Status'</span>].isin([<span class="st">'Single'</span>,<span class="st">'Together'</span>,<span class="st">'Married'</span>,<span class="st">'Divorced'</span>,<span class="st">'Widow'</span>])] <span class="co"># исключаем слишком маленькие группы, чтобы не искажать тест</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>groups <span class="op">=</span> [df[df[<span class="st">'Marital_Status'</span>] <span class="op">==</span> status][<span class="st">'MntWines'</span>].values <span class="cf">for</span> status <span class="kw">in</span> df[<span class="st">'Marital_Status'</span>].unique()] <span class="co"># массив со списками трат для каждой группы</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> f_oneway</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>F_real <span class="op">=</span> f_oneway(<span class="op">*</span>groups)[<span class="dv">0</span>] <span class="co"># однофакторный ANOVA на реальных данных (реальная F-статистика)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Перестановочный бутстрап</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> <span class="dv">5000</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>F_boot <span class="op">=</span> []</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(B):</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    shuffled <span class="op">=</span> np.random.permutation(df[<span class="st">'Marital_Status'</span>]) <span class="co"># перемешиваем метки групп</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    df[<span class="st">'shuffled_group'</span>] <span class="op">=</span> shuffled <span class="co"># добавляем в датафрейм перемешанные группы</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    groups_shuffled <span class="op">=</span> [df[df[<span class="st">'shuffled_group'</span>] <span class="op">==</span> status][<span class="st">'MntWines'</span>].values <span class="cf">for</span> status <span class="kw">in</span> df[<span class="st">'Marital_Status'</span>].unique()] <span class="co"># массив со списками трат для каждой группы после перемешивания</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    F <span class="op">=</span> f_oneway(<span class="op">*</span>groups_shuffled)[<span class="dv">0</span>] <span class="co"># считаем F-статистику для перемешанных данных</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    F_boot.append(F) <span class="co"># сохраняем значение F-статистики</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>F_boot <span class="op">=</span> np.array(F_boot)</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. p-value</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>p_value <span class="op">=</span> np.mean(F_boot <span class="op">&gt;=</span> F_real) <span class="co"># доля случаев, когда F-статистика из бутстрапа больше или равна реальной</span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Real F-statistic:"</span>, F_real)</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Bootstrap p-value:"</span>, p_value)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Real F-statistic: 1.25343747865223
+Bootstrap p-value: 0.2826</code></pre>
+</div>
+</div>
+<p>Итак, наше p-значение получилось напиного больше 0,05, а значит нет оснований отвергать нулевую гипотезу о том, что различий между группами нет.<br>
+Буквально ~28% случайных перестановок дали F-статистику не меньше, чем реальная, значит различия между группами легко возникают из-за простой случайности.<br>
+F-статистика в данном случае - это отношение дисперсий между группами и внутри групп, то есть значение 1,25 говорит о том, что группы не сильно отличаются</p>
+<section id="резюме-1" class="level4">
+<h4 class="anchored" data-anchor-id="резюме-1">Резюме</h4>
+<blockquote class="blockquote">
+<p>Статистически значимых различий трат на вино между marital status нет. Семейное положение НЕ оказывает заметного влияния на траты на вино у клиентов в этом датасете.</p>
 </blockquote>
 
 
